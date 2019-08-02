@@ -17,15 +17,19 @@ class Meme:
         self.soup = None
     
     def parse(self, meme_url):
+        # Parse in the result URL and soup object for it
         self.siteURL = meme_url
         r = requests.get(self.siteURL, headers=HEADERS)
         self.soup = BeautifulSoup(r.text, 'html.parser')
 
+        # Parse in the definition of the result meme
         def_tag = self.soup.find('h2', {'id': 'about'})
-        print(def_tag)
         self.definition = def_tag.next_element.next_element.next_element.text
 
-        img_tag = self.soup.find('header', class_='rel c')
+        # Parse in the according image URL
+        meme_header_tag = self.soup.find('header', class_='rel c')
+        img_tag = meme_header_tag.find('a', class_='photo left')['href']
+        self.imageURL = img_tag
 
 class MemeSearcher(Meme):
     def __init__(self, search_keyword):
@@ -48,34 +52,8 @@ class MemeSearcher(Meme):
         self.meme_result_url = 'https://knowyourmeme.com{}'.format(search_path)
         self.parse(self.meme_result_url)
 
-
-# def meme_list(text):
-#     try:
-#         re = requests.get(f'http://knowyourmeme.com/search?q={text}', headers=HEADERS)
-#         re.raise_for_status
-#     except Exception as e:
-#         print(f'Something wrong: {e}')
-#     soup = BeautifulSoup(re.text, 'html.parser')
-#     search_result = soup.find(class_='entry_list')
-#     if search_result:
-#         search_path = search_result.find('a', href=True)['href']
-#         if search_path:
-#             print(search_path.replace('-', ' '))
-#             return search_path.replace('-', ' '), 'https://knowyourmeme.com{}'.format(search_path)
-#         else:
-#             raise Exception('Could not locate the content URL')
-#     return None, None
-
-# def search(text):
-#     """Return a meme definition from a meme keywords.
-#     """
-#     meme_name, url = meme_list(text)
-#     # if meme_name and SequenceMatcher(None, text, meme_name).ratio() >= 0.4:
-#     r = requests.get(url, headers=HEADERS)
-#     soup = BeautifulSoup(r.text, 'html.parser')
-#     entry = soup.find('h2', {'id': 'about'})
-#     return '%s \n %s' % (meme_name.split('/')[-1].title(), entry.next.next.next.text)
-
 if __name__ == "__main__":
+    
+    # Sample test for the scraper
     search_word = input('Enter search for meme: ')
     print(MemeSearcher(search_word).definition)
